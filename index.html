@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บัญชีวินัยเลว - Realtime</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+body{
+  font-family:'Sarabun',sans-serif;
+  background:#f2f2f2;
+  margin:0;
+  padding:16px;
+}
+
+.container{
+  max-width:720px;
+  margin:auto;
+}
+
+.title{
+  text-align:center;
+  font-size:26px;
+  font-weight:700;
+  color:#b30000;
+  margin-bottom:10px;
+}
+
+.search-box{
+  background:#ffecec;
+  padding:14px;
+  border-radius:16px;
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+  position: sticky;
+  top: 10px;
+  z-index: 100;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.search-box input{
+  flex:1;
+  padding:12px;
+  font-size:16px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  outline: none;
+}
+
+.card{
+  background:#fff;
+  border-radius:18px;
+  overflow:hidden;
+  margin-bottom:20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.card-header{
+  background:#b30000;
+  color:#fff;
+  padding:14px;
+  font-weight:700;
+  font-size:18px;
+  text-align:center;
+}
+
+.table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.table td{
+  padding:14px;
+  vertical-align:top;
+  border-bottom:1px solid #ddd;
+}
+
+.label{
+  width:35%;
+  background:#fff7cc;
+  color:#b30000;
+  font-weight:700;
+}
+
+.value{
+  width:65%;
+  color:#333;
+  line-height:1.6;
+}
+
+.footer-warn{
+  background:#ffecec;
+  color:#b30000;
+  font-weight:700;
+}
+
+.status-msg {
+  text-align: center;
+  color: #666;
+  margin-top: 20px;
+}
+
+.notfound{
+  text-align:center;
+  color:#b30000;
+  font-weight:700;
+  display:none;
+  padding: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="title">⚖️ บัญชีวินัยเลว</div>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="ป้อนชื่อ หรือ แผนก เพื่อค้นหา...">
+  </div>
+
+  <div id="result">
+     <p class="status-msg">กำลังโหลดข้อมูลจาก Google Sheets...</p>
+  </div>
+
+  <div class="notfound" id="notfound">❌ ไม่พบข้อมูลที่ค้นหา</div>
+
+</div>
+
+<script>
+// API URL จาก Sheet.best ของคุณ
+const API_URL = "https://api.sheetbest.com/sheets/4ee8fe83-1d4a-49ca-b3cf-24fd0e83aa08"; 
+
+let records = []; 
+
+const result = document.getElementById("result");
+const input = document.getElementById("searchInput");
+const notfound = document.getElementById("notfound");
+
+// ฟังก์ชันดึงข้อมูลแบบ Async
+async function fetchData() {
+    try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('Network response was not ok');
+        records = await response.json();
+        render(records);
+    } catch (error) {
+        console.error("Error fetching data:", error);
+        result.innerHTML = "<p class='status-msg' style='color:red;'>⚠️ ไม่สามารถโหลดข้อมูลได้ โปรดเช็คการเชื่อมต่อหรือ API quota</p>";
+    }
+}
+
+// กรองข้อมูล Real-time ขณะพิมพ์
+input.addEventListener("input", () => {
+    const keyword = input.value.trim().toLowerCase();
+    const filtered = records.filter(r => 
+        (r["ชื่อ"] && r["ชื่อ"].toString().toLowerCase().includes(keyword)) ||
+        (r["แผนก"] && r["แผนก"].toString().toLowerCase().includes(keyword))
+    );
+    render(filtered);
+});
+
+function render(list) {
+    result.innerHTML = "";
+    
+    if (!list || list.length === 0) {
+        notfound.style.display = "block";
+        return;
+    }
+    
+    notfound.style.display = "none";
+
+    list.forEach(r => {
+        result.innerHTML += `
+        <div class="card">
+          <div class="card-header">[ บันทึกรายการทำความผิด ]</div>
+          <table class="table">
+            <tr><td class="label">ชื่อ:</td><td class="value">${r["ชื่อ"] || '-'}</td></tr>
+            <tr><td class="label">วันที่บันทึก:</td><td class="value">${r["วันที่บันทึก"] || '-'}</td></tr>
+            <tr><td class="label">จากแผนก:</td><td class="value">${r["แผนก"] || '-'}</td></tr>
+            <tr><td class="label">รายงานความผิด:</td><td class="value">${r["รายงานความผิด"] || '-'}</td></tr>
+            <tr><td class="label">โทษที่ได้รับ:</td><td class="value">${r["โทษที่ได้รับ"] || '-'}</td></tr>
+            <tr>
+              <td class="label footer-warn">วินัยที่ละเมิด:</td>
+              <td class="value footer-warn">${r["วินัยที่ละเมิด"] || '-'}</td>
+            </tr>
+          </table>
+        </div>`;
+    });
+}
+
+// เรียกใช้ฟังก์ชันดึงข้อมูลเมื่อเปิดหน้าเว็บ
+fetchData();
+</script>
+
+</body>
+</html>
