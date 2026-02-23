@@ -1,222 +1,360 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>บัญชีวินัยเลว - Realtime</title>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บัญชีวินัยเลว</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #b30000;
+            --gold-accent: #d4af37;
+            --bg-page: #fff9f9; /* สีพื้นหลังอ่อนๆ ตามวิดีโอ */
+        }
 
-<style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background: var(--bg-page);
+            margin: 0;
+            padding: 0;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* --- Animation หัวข้อขยับ --- */
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* --- Splash Screen (หน้าแรกตามวิดีโอ) --- */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #ffffff 0%, #f9d9d9 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .welcome-logo {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-red);
+            margin-bottom: 5px;
+        }
+
+        .welcome-sub {
+            color: var(--gold-accent);
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .btn-start {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 14px 60px;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(179, 0, 0, 0.3);
+            transition: 0.3s;
+        }
+
+        .btn-start:active { transform: scale(0.95); }
+
+        /* --- Main Content (หน้าสองตามรูปภาพ) --- */
+        .container {
+            max-width: 500px;
+            margin: auto;
+            padding: 20px;
+            display: none;
+            animation: fadeIn 0.8s ease;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .app-header {
+            text-align: center;
+            margin: 40px 0 30px 0;
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        .app-header h1 {
+            color: var(--primary-red);
+            font-size: 28px;
+            margin: 10px 0;
+        }
+
+        .gold-line-header {
+            width: 60px;
+            height: 3px;
+            background: var(--gold-accent);
+            margin: auto;
+            border-radius: 10px;
+        }
+
+        /* Search Box */
+        .search-container {
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+        }
+
+        .search-container input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .btn-search {
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* --- Card แบบเส้นบางและพื้นหลังขาว --- */
+        .card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 30px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.07);
+            border: 1px solid #f0f0f0;
+        }
+
+        .card-header {
+            background: var(--primary-red);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 17px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .info-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid #f8f8f8;
+            font-size: 14.5px;
+            background: #ffffff; /* เปลี่ยนเป็นสีขาวตามสั่ง */
+        }
+
+        .label {
+            width: 40%;
+            font-weight: 700;
+            color: var(--primary-red);
+            border-right: 2px solid var(--gold-accent); /* เส้นทองแบบบาง */
+        }
+
+        .value {
+            color: #444;
+            font-weight: 500;
+        }
+
+        .footer-warn {
+            color: var(--primary-red);
+            font-weight: 700;
+            background: #fffafa !important;
+        }
+
+        /* Loader */
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-red);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin-top: 20px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .footer-credit {
+            text-align: center;
+            font-size: 10px;
+            color: #bbb;
+            margin: 50px 0 20px 0;
+        }
+        /* 1. อะนิเมชั่นลอยขึ้นลง (สำหรับหัวข้อ) */
 @keyframes floating {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0px); }
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
 }
 
-.title {
-  display: inline-block; /* สำคัญเพื่อให้ Transform ทำงานได้ดี */
-  width: 100%;
-  animation: floating 3s ease-in-out infinite; /* ขยับวนไปเรื่อยๆ */
-}
-.title {
-  text-align: center;
-  font-size: 26px;
-  font-weight: 700;
-  color: #b30000;
-  margin-bottom: 10px;
-  /* เพิ่มบรรทัดด้านล่างนี้ */
-  display: block; 
-  animation: fadeInUp 1s ease-out, floating 3s ease-in-out infinite 1s;
+/* 2. อะนิเมชั่นฟุ้งกระจาย (สำหรับไอคอนตาชั่ง) */
+@keyframes iconGlow {
+    0% { filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5)); }
+    50% { filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.9)); }
+    100% { filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5)); }
 }
 
-body{
-  font-family:'Sarabun',sans-serif;
-  background:#f2f2f2;
-  margin:0;
-  padding:16px;
+/* 3. อะนิเมชั่นเปลี่ยนสี แดง <-> ทอง (สำหรับข้อความต้อนรับ) */
+@keyframes colorChange {
+    0% { color: #b30000; }
+    25% { color: #d4af37; }
+    50% { color: #b30000; }
+        75% { color: #d4af37; }
+            100% { color: #b30000; }
 }
 
-.container{
-  max-width:720px;
-  margin:auto;
+/* การนำไปใช้งานใน Class ต่างๆ */
+.welcome-logo {
+    font-size: 60px;
+    margin-bottom: 15px;
+    animation: floating 3s ease-in-out infinite, iconGlow 3s ease-in-out infinite;
 }
 
-.title{
-  text-align:center;
-  font-size:26px;
-  font-weight:700;
-  color:#b30000;
-  margin-bottom:10px;
+.welcome-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #b30000;
+    margin-bottom: 5px;
+    animation: floating 3s ease-in-out infinite;
 }
 
-.search-box{
-  background:#ffecec;
-  padding:14px;
-  border-radius:16px;
-  display:flex;
-  gap:10px;
-  margin-bottom:20px;
-  position: sticky;
-  top: 10px;
-  z-index: 100;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+.welcome-sub {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 30px;
+    animation: colorChange 3s ease-in-out infinite; /* เปลี่ยนสีแดง-ทอง */
 }
 
-.search-box input{
-  flex:1;
-  padding:12px;
-  font-size:16px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  outline: none;
-}
-
-.card{
-  background:#fff;
-  border-radius:18px;
-  overflow:hidden;
-  margin-bottom:20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.card-header{
-  background:#b30000;
-  color:#fff;
-  padding:14px;
-  font-weight:700;
-  font-size:18px;
-  text-align:center;
-}
-
-.table{
-  width:100%;
-  border-collapse:collapse;
-}
-
-.table td{
-  padding:14px;
-  vertical-align:top;
-  border-bottom:1px solid #ddd;
-}
-
-.label{
-  width:35%;
-  background:#fff7cc;
-  color:#b30000;
-  font-weight:700;
-}
-
-.value{
-  width:65%;
-  color:#333;
-  line-height:1.6;
-}
-
-.footer-warn{
-  background:#ffecec;
-  color:#b30000;
-  font-weight:700;
-}
-
-.status-msg {
-  text-align: center;
-  color: #666;
-  margin-top: 20px;
-}
-
-.notfound{
-  text-align:center;
-  color:#b30000;
-  font-weight:700;
-  display:none;
-  padding: 20px;
-}
-</style>
+    </style>
 </head>
-
 <body>
 
-<div class="container">
+    <div id="splash-screen">
+        <div class="welcome-title">⚖️ บัญชีวินัยเลว</div>
+        <div class="welcome-sub" id="status-text">ยินดีต้อนรับสู่ฐานข้อมูล</div>
+        <div class="loader" id="loader"></div>
+        <button class="btn-start" id="startBtn" onclick="initApp()">เริ่มต้นใช้งาน</button>
+    </div>
 
-  <div class="title">⚖️ บัญชีวินัยเลว</div>
+    <div class="container" id="mainApp">
+        <div class="app-header">
+            <h1>⚖️ บัญชีวินัยเลว</h1>
+            <div class="gold-line-header"></div>
+        </div>
 
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="ป้อนชื่อ หรือ แผนก เพื่อค้นหา...">
-  </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="ป้อนชื่อเพื่อค้นหา . . .">
+            <button class="btn-search">ค้นหา</button>
+        </div>
 
-  <div id="result">
-     <p class="status-msg">กำลังโหลดข้อมูลจาก Google Sheets...</p>
-  </div>
+        <div id="resultList"></div>
+        <div id="notfound" style="display:none; text-align:center; color:red; padding:30px;">❌ ไม่พบข้อมูลในระบบ</div>
 
-  <div class="notfound" id="notfound">❌ ไม่พบข้อมูลที่ค้นหา</div>
-
-</div>
+        <div class="footer-credit">
+            © 2026 รัฐธรรมนูญแห่งราชอาณาจักรไทย Roblox Roleplay | บริหารงานโดย CEO uiyhedhr3
+        </div>
+    </div>
 
 <script>
-// API URL จาก Sheet.best ของคุณ
-const API_URL = "https://api.sheetbest.com/sheets/4ee8fe83-1d4a-49ca-b3cf-24fd0e83aa08"; 
+    const API_URL = "https://api.sheetbest.com/sheets/4ee8fe83-1d4a-49ca-b3cf-24fd0e83aa08";
+    let allRecords = [];
 
-let records = []; 
+    async function initApp() {
+        const startBtn = document.getElementById('startBtn');
+        const loader = document.getElementById('loader');
+        const statusText = document.getElementById('status-text');
 
-const result = document.getElementById("result");
-const input = document.getElementById("searchInput");
-const notfound = document.getElementById("notfound");
+        startBtn.style.display = 'none';
+        loader.style.display = 'block';
+        statusText.innerText = "กำลังเข้าสู่ระบบ...";
 
-// ฟังก์ชันดึงข้อมูลแบบ Async
-async function fetchData() {
-    try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error('Network response was not ok');
-        records = await response.json();
-        render(records);
-    } catch (error) {
-        console.error("Error fetching data:", error);
-        result.innerHTML = "<p class='status-msg' style='color:red;'>⚠️ ไม่สามารถโหลดข้อมูลได้ โปรดเช็คการเชื่อมต่อหรือ API quota</p>";
+        try {
+            const response = await fetch(API_URL);
+            allRecords = await response.json();
+            
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            splash.style.transform = 'scale(1.1)';
+            
+            setTimeout(() => {
+                splash.style.display = 'none';
+                document.getElementById('mainApp').style.display = 'block';
+                render(allRecords);
+            }, 600);
+
+        } catch (error) {
+            statusText.innerText = "การเชื่อมต่อล้มเหลว";
+            startBtn.style.display = 'block';
+            loader.style.display = 'none';
+        }
     }
-}
 
-// กรองข้อมูล Real-time ขณะพิมพ์
-input.addEventListener("input", () => {
-    const keyword = input.value.trim().toLowerCase();
-    const filtered = records.filter(r => 
-        (r["ชื่อ"] && r["ชื่อ"].toString().toLowerCase().includes(keyword)) ||
-        (r["แมพ"] && r["แมพ"].toString().toLowerCase().includes(keyword))
-    );
-    render(filtered);
-});
-
-function render(list) {
-    result.innerHTML = "";
-    
-    if (!list || list.length === 0) {
-        notfound.style.display = "block";
-        return;
-    }
-    
-    notfound.style.display = "none";
-
-    list.forEach(r => {
-        result.innerHTML += `
-        <div class="card">
-          <div class="card-header">[ บันทึกรายการทำความผิด ]</div>
-          <table class="table">
-            <tr><td class="label">ชื่อ:</td><td class="value">${r["ชื่อ"] || '-'}</td></tr>
-            <tr><td class="label">วันที่บันทึก:</td><td class="value">${r["วันที่บันทึก"] || '-'}</td></tr>
-            <tr><td class="label">แมพ:</td><td class="value">${r["แมพ"] || '-'}</td></tr>
-            <tr><td class="label">รายงานการทำความผิด:</td><td class="value">${r["รายงานการทำความผิด"] || '-'}</td></tr>
-            <tr><td class="label">โทษที่ได้รับ:</td><td class="value">${r["โทษที่ได้รับ"] || '-'}</td></tr>
-            <tr>
-              <td class="label footer-warn">วินัยที่ละเมิด:</td>
-              <td class="value footer-warn">${r["วินัยที่ละเมิด"] || '-'}</td>
-            </tr>
-          </table>
-        </div>`;
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+        const val = e.target.value.toLowerCase();
+        const filtered = allRecords.filter(item => 
+            (item["ชื่อ"] && item["ชื่อ"].toString().toLowerCase().includes(val)) ||
+            (item["แมพ"] && item["แมพ"].toString().toLowerCase().includes(val))
+        );
+        render(filtered);
     });
-}
 
-// เรียกใช้ฟังก์ชันดึงข้อมูลเมื่อเปิดหน้าเว็บ
-fetchData();
+    function render(data) {
+        const listDiv = document.getElementById('resultList');
+        const notfound = document.getElementById('notfound');
+        listDiv.innerHTML = "";
+
+        if (data.length === 0) {
+            notfound.style.display = 'block';
+            return;
+        }
+        notfound.style.display = 'none';
+
+        data.forEach(row => {
+            listDiv.innerHTML += `
+                <div class="card">
+                    <div class="card-header">[ บันทึกการทำความผิด ]</div>
+                    <table class="info-table">
+                        <tr><td class="label">ชื่อ:</td><td class="value">${row["ชื่อ"] || '-'}</td></tr>
+                        <tr><td class="label">วันที่บันทึก:</td><td class="value">${row["วันที่บันทึก"] || '-'}</td></tr>
+                        <tr><td class="label">จากแมพ:</td><td class="value">${row["แมพ"] || '-'}</td></tr>
+                        <tr><td class="label">รายงานการทำความผิด:</td><td class="value">${row["รายงานการทำความผิด"] || '-'}</td></tr>
+                        <tr><td class="label">โทษที่ได้รับ:</td><td class="value">${row["โทษที่ได้รับ"] || '-'}</td></tr>
+                        </tr>
+                          <td class="label footer-warn">วินัยเลว:</td>
+                          <td class="value footer-warn">${row["วินัยที่ละเมิด"] || '-'} </td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+        });
+    }
 </script>
-
 </body>
 </html>
