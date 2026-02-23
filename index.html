@@ -7,6 +7,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
+@keyframes floating {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+  100% { transform: translateY(0px); }
+}
+
+.title {
+  display: inline-block; /* สำคัญเพื่อให้ Transform ทำงานได้ดี */
+  width: 100%;
+  animation: floating 3s ease-in-out infinite; /* ขยับวนไปเรื่อยๆ */
+}
+.title {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: #b30000;
+  margin-bottom: 10px;
+  /* เพิ่มบรรทัดด้านล่างนี้ */
+  display: block; 
+  animation: fadeInUp 1s ease-out, floating 3s ease-in-out infinite 1s;
+}
+
 body{
   font-family:'Sarabun',sans-serif;
   background:#f2f2f2;
